@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -13,9 +14,11 @@ namespace Scheduler.Tests
         [Test]
         public void Creating_an_appointment_returns_the_new_appointment_identifier()
         {
-            var scheduler = new Scheduler1();
+            // TODO: Extract SchedulerManager creation from tests.
+            var scheduler = new SchedulerManager();
 
-            var identifier = scheduler.CreateAppointment();
+            var myDate = DateTime.Now;
+            var identifier = scheduler.CreateAppointment(myDate);
 
             Assert.That(identifier, Is.Not.Null);
         }
@@ -23,21 +26,22 @@ namespace Scheduler.Tests
         [Test]
         public void Creating_an_appointment_persists_the_new_appointment()
         {
-            var scheduler = new Scheduler1();
+            var scheduler = new SchedulerManager();
 
-            var identifier = scheduler.CreateAppointment();
-            // appt -> appointment
+            var myDate = DateTime.Now;
+            var identifier = scheduler.CreateAppointment(myDate);
+            // TODO: rename: appt -> appointment
             var appt = scheduler.GetById(identifier);
 
             Assert.That(appt, Is.Not.Null);
-            Assert.That(appt, Is.TypeOf<Appointment>()); // Type Check
+            Assert.That(appt, Is.TypeOf<Appointment>()); // TODO: Type Check
             Assert.That(appt.identifier, Is.EqualTo(identifier));
         }
         
         [Test]
         public void Getting_by_id_non_existing_appointment_returns_null()
         {
-            var scheduler = new Scheduler1();
+            var scheduler = new SchedulerManager();
             
             var appt = scheduler.GetById(1);
             
@@ -47,36 +51,79 @@ namespace Scheduler.Tests
         [Test]
         public void Creating_2_appointments_returns_2_distinct_identifiers()
         {
-            var scheduler = new Scheduler1();
-            
-            var appointment1Id = scheduler.CreateAppointment();
-            var appointment2Id = scheduler.CreateAppointment();
+            var scheduler = new SchedulerManager();
+            var myDate = DateTime.Now;
+            var appointment1Id = scheduler.CreateAppointment(myDate);
+            var appointment2Id = scheduler.CreateAppointment(myDate);
             
             Assert.That(appointment1Id,Is.Not.EqualTo(appointment2Id));
         }
+
+        [Test]
+        public void Creating_1_appointment_with_invalid_datetime_return_error()
+        {
+            var scheduler = new SchedulerManager();
+       
+            var myDate = new DateTime();
+            //TODO: Create a specific exception for this.
+            Assert.Throws<System.Exception>(() => scheduler.CreateAppointment(myDate));
+        }
+        
+        [Test]
+        public void Getting_appointments_for_today_returns_todays_appointments()
+        {
+            var scheduler = new SchedulerManager();
+            var myDate = DateTime.Now;
+            var identifier = scheduler.CreateAppointment(myDate);
+            List<Appointment> appointmentsList = scheduler.GetAppointmentsByDate();
+
+            // TODO: improve test feedback.
+            var containsIdentifier = appointmentsList.Any((a) => a.identifier == identifier);
+            Assert.That(containsIdentifier,Is.True);
+        }
     }
 
-    // TODO: Scheduler1 -> rename needed
-    public class Scheduler1
+    // TODO: rename to something useful
+    public class XptoAppointmentClass
     {
-        // TODO: Split: Business Rules Scheduler1 | Data from elsewhere 
-        // Violates: SRP, OCP 
-        List<Appointment> appointments = new List<Appointment>();
-        public object CreateAppointment()
+        private List<Appointment> appointments = new List<Appointment>();
+
+        public int AddAppointment(Appointment appointment)
         {
-            // TODO: Use object initializer
-            // TODO: Use var
-            Appointment appointment = new Appointment();
-            appointment.identifier = appointments.Count;
             appointments.Add(appointment);
+            return appointments.Count;
+        }
+
+        // TODO: rename to something useful
+        public Appointment? XptoAppointment(object identifier)
+        {
+            return appointments.FirstOrDefault(a => a.identifier == identifier);
+        }
+    }
+
+    public class SchedulerManager
+    { 
+        // TODO: create abstraction
+        // Violates: DIP, OCP
+        private readonly XptoAppointmentClass _xptoAppointmentClass = new XptoAppointmentClass();
+
+        public object CreateAppointment(DateTime myDate)
+        {
+            if(myDate == new DateTime())
+                throw new System.Exception();
+            var appointment = new Appointment();
+            appointment.identifier = _xptoAppointmentClass.AddAppointment(appointment);
             return appointment.identifier;
         }
 
         internal Appointment GetById(object identifier)
         {
-            // TODO: inline
-            var appt = appointments.FirstOrDefault(a => a.identifier == identifier);
-            return appt;
+            return _xptoAppointmentClass.XptoAppointment(identifier);
+        }
+
+        public List<Appointment> GetAppointmentsByDate()
+        {
+            throw new NotImplementedException();
         }
     }
 }
