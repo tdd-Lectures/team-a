@@ -11,6 +11,7 @@ namespace Scheduler.Tests
     // GetAppointments(...)
     public class Tests
     {
+
         [Test]
         public void Creating_an_appointment_returns_the_new_appointment_identifier()
         {
@@ -18,7 +19,10 @@ namespace Scheduler.Tests
             var scheduler = new SchedulerManager();
 
             var myDate = DateTime.Now;
-            var identifier = scheduler.CreateAppointment(myDate);
+            var subject = "meeting";
+            var durationInMinutes = 45;
+
+            var identifier = scheduler.CreateAppointment(new NewAppointment(myDate, subject, durationInMinutes));
 
             Assert.That(identifier, Is.Not.Null);
         }
@@ -29,13 +33,12 @@ namespace Scheduler.Tests
             var scheduler = new SchedulerManager();
 
             var myDate = DateTime.Now;
-            var identifier = scheduler.CreateAppointment(myDate);
-            // TODO: rename: appt -> appointment
-            var appt = scheduler.GetById(identifier);
+            var subject = "meeting";
+            var durationInMinutes = 45;
+            var identifier = scheduler.CreateAppointment(new NewAppointment(myDate, subject, durationInMinutes));
+            var appointment = scheduler.GetById(identifier);
 
-            Assert.That(appt, Is.Not.Null);
-            Assert.That(appt, Is.TypeOf<Appointment>()); // TODO: Type Check
-            Assert.That(appt.identifier, Is.EqualTo(identifier));
+            Assert.That(appointment, Is.EqualTo(MakeAppointment(myDate, identifier, subject, durationInMinutes)));
         }
         
         [Test]
@@ -43,9 +46,9 @@ namespace Scheduler.Tests
         {
             var scheduler = new SchedulerManager();
             
-            var appt = scheduler.GetById(1);
+            var appointment = scheduler.GetById(1);
             
-            Assert.That(appt, Is.Null);
+            Assert.That(appointment, Is.Null);
         }
         
         [Test]
@@ -53,8 +56,11 @@ namespace Scheduler.Tests
         {
             var scheduler = new SchedulerManager();
             var myDate = DateTime.Now;
-            var appointment1Id = scheduler.CreateAppointment(myDate);
-            var appointment2Id = scheduler.CreateAppointment(myDate);
+            var subject = "meeting";
+            var durationInMinutes = 45;
+
+            var appointment1Id = scheduler.CreateAppointment(new NewAppointment(myDate, subject, durationInMinutes));
+            var appointment2Id = scheduler.CreateAppointment(new NewAppointment(myDate, subject, durationInMinutes));
             
             Assert.That(appointment1Id,Is.Not.EqualTo(appointment2Id));
         }
@@ -65,8 +71,11 @@ namespace Scheduler.Tests
             var scheduler = new SchedulerManager();
        
             var myDate = new DateTime();
+            var subject = "meeting";
+            var durationInMinutes = 45;
+
             //TODO: Create a specific exception for this.
-            Assert.Throws<System.Exception>(() => scheduler.CreateAppointment(myDate));
+            Assert.Throws<System.Exception>(() => scheduler.CreateAppointment(new NewAppointment(myDate, subject, durationInMinutes)));
         }
         
         [Test]
@@ -74,13 +83,33 @@ namespace Scheduler.Tests
         {
             var scheduler = new SchedulerManager();
             var myDate = DateTime.Now;
-            var identifier = scheduler.CreateAppointment(myDate);
-            List<Appointment> appointmentsList = scheduler.GetAppointmentsByDate();
+            var subject = "meeting";
+            var durationInMinutes = 45;
+
+            var appointmentIdentifierToday = scheduler.CreateAppointment(new NewAppointment(myDate, subject, durationInMinutes));
+            
+            var appointmentIdentifierTomorrow = scheduler.CreateAppointment(new NewAppointment(myDate.AddDays(1), subject, durationInMinutes));
+            List<Appointment> appointmentsList = scheduler.GetAppointmentsByDate(myDate);
 
             // TODO: improve test feedback.
-            var containsIdentifier = appointmentsList.Any((a) => a.identifier == identifier);
+            var containsIdentifier = appointmentsList.Any((a) => a.identifier == appointmentIdentifierToday);
             Assert.That(containsIdentifier,Is.True);
+            var notContainsIdentifierTomorrow =
+                appointmentsList.Any(a => a.identifier == appointmentIdentifierTomorrow);
+            Assert.That(notContainsIdentifierTomorrow,Is.False);
         }
+
+        public Appointment MakeAppointment(DateTime? datetime = null, object identifier = null,String subject = "Meeting", int durationInMinutes = 0)
+        {
+
+            return new Appointment { 
+                subject = subject,
+                datetime = datetime ?? new DateTime(2020, 1, 1),
+                identifier = identifier ?? (object) 1,
+                durationInMinutes = durationInMinutes,
+            };
+        }
+    
     }
 
     // TODO: rename to something useful
@@ -99,6 +128,25 @@ namespace Scheduler.Tests
         {
             return appointments.FirstOrDefault(a => a.identifier == identifier);
         }
+        
+        public List<Appointment> GetAppointmentsByDate(DateTime dateTime)
+        {
+            return appointments.Where(a => a.datetime == dateTime).ToList();
+        }
+    }
+
+    public class NewAppointment
+    {
+        public NewAppointment(DateTime myDate, string subject, int durationInMinutes)
+        {
+            MyDate = myDate;
+            Subject = subject;
+            DurationInMinutes = durationInMinutes;
+        }
+
+        public DateTime MyDate { get; private set; }
+        public string Subject { get; private set; }
+        public int DurationInMinutes { get; private set; }
     }
 
     public class SchedulerManager
@@ -107,11 +155,16 @@ namespace Scheduler.Tests
         // Violates: DIP, OCP
         private readonly XptoAppointmentClass _xptoAppointmentClass = new XptoAppointmentClass();
 
-        public object CreateAppointment(DateTime myDate)
+        public object CreateAppointment(NewAppointment newAppointment)
         {
-            if(myDate == new DateTime())
+            if(newAppointment.MyDate == new DateTime())
                 throw new System.Exception();
-            var appointment = new Appointment();
+            var appointment = new Appointment
+            {
+                datetime = newAppointment.MyDate,
+                subject = newAppointment.Subject,
+                durationInMinutes = newAppointment.DurationInMinutes,
+            };
             appointment.identifier = _xptoAppointmentClass.AddAppointment(appointment);
             return appointment.identifier;
         }
@@ -121,9 +174,9 @@ namespace Scheduler.Tests
             return _xptoAppointmentClass.XptoAppointment(identifier);
         }
 
-        public List<Appointment> GetAppointmentsByDate()
+        public List<Appointment> GetAppointmentsByDate(DateTime dateTime)
         {
-            throw new NotImplementedException();
+            return _xptoAppointmentClass.GetAppointmentsByDate(dateTime);
         }
     }
 }

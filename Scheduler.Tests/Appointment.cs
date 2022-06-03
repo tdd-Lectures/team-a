@@ -1,8 +1,16 @@
-﻿namespace Scheduler.Tests
+﻿using System;
+
+namespace Scheduler.Tests
 {
     // TODO: we changed from Class to Record
     public record Appointment
     {
-        internal object identifier;
+        public object identifier{get;set;}
+        
+        public DateTime datetime{get;set;}
+
+        public String subject;
+
+        public int durationInMinutes { get; set; }
     }
 }
