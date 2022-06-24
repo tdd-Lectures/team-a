@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Scheduler.Tests
 {
-    // TODO: we changed from Class to Record
     public record Appointment
     {
         public object identifier{get;set;}
@@ -12,5 +12,7 @@ namespace Scheduler.Tests
         public String subject;
 
         public int durationInMinutes { get; set; }
+        public IEnumerable<string> attendees { get; set; }
+        public string location { get; set; }
     }
 }
