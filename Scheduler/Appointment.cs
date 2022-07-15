@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Scheduler.Tests
+namespace Scheduler
 {
     public record Appointment
     {

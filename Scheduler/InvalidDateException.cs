@@ -2,7 +2,7 @@
 
 namespace Scheduler
 {
-    public class Class1
+    public class InvalidDateException : Exception
     {
     }
 }
