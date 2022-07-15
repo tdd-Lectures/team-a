@@ -21,7 +21,7 @@ namespace Scheduler.Tests
 
         public List<Appointment> GetAppointmentsByDate(DateTime dateTime)
         {
-            return appointments.Where(a => a.datetime == dateTime).ToList();
+            return appointments.Where(a => a.Datetime == dateTime).ToList();
         }
     }
 }

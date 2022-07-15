@@ -32,7 +32,7 @@ namespace Scheduler
         {
             return new Appointment
             {
-                datetime = newAppointment.MyDate,
+                Datetime = newAppointment.MyDate,
                 subject = newAppointment.Subject,
                 durationInMinutes = newAppointment.DurationInMinutes,
                 attendees = newAppointment.Attendees,
@@ -64,6 +64,21 @@ namespace Scheduler
             // DateTime endDateTime = newRecurrentAppointment.Periodicity._endDateTime;
             //
             return 1;
+        }
+
+        public IEnumerable<Appointment> GetAppointmentsBetweenDates(DateTime dateTime, DateTime dateTime1)
+        {
+            return new List<Appointment>
+                {
+                    new Appointment
+                    {
+                        Datetime = new DateTime(2020, 1, 1),
+                        subject = "Meeting",
+                        durationInMinutes = 60,
+                        attendees = new[] {"user1"},
+                        location = "PINTA-LX"
+                    }
+                };
         }
     }
 }

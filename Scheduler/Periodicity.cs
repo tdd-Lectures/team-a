@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Scheduler
 {
@@ -6,13 +7,13 @@ namespace Scheduler
     {
        public readonly DateTime _startDateTime;
        public readonly DateTime _endDateTime;
-       public readonly WeekDay _weekday;
+       public readonly IEnumerable<WeekDay> _weekdays;
 
-        public Periodicity(DateTime startDateTime, DateTime endDateTime, WeekDay weekday)
+        public Periodicity(DateTime startDateTime, DateTime endDateTime, IEnumerable<WeekDay> weekdays)
         {
             _startDateTime = startDateTime;
             _endDateTime = endDateTime;
-            _weekday = weekday;
+            _weekdays = weekdays;
         }
     }
 }

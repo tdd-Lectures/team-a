@@ -7,7 +7,7 @@ namespace Scheduler
     {
         public object identifier{get;set;}
         
-        public DateTime datetime{get;set;}
+        public DateTime Datetime{get;set;}
 
         public String subject;
 

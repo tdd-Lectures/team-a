@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
@@ -40,7 +41,7 @@ namespace Scheduler.Tests
             RecordsAssert.AreEqual(appointment, new Appointment
             {
                 identifier = 1,
-                datetime = new DateTime(2020, 1, 1),
+                Datetime = new DateTime(2020, 1, 1),
                 subject = "Meeting",
                 durationInMinutes = 60,
                 attendees = new[] {"user1"},
@@ -112,7 +113,7 @@ namespace Scheduler.Tests
                 new Appointment
                 {
                     identifier = 1,
-                    datetime = myDate,
+                    Datetime = myDate,
                     subject = subject,
                     durationInMinutes = durationInMinutes,
                     attendees = attendees,
@@ -135,11 +136,100 @@ namespace Scheduler.Tests
                 periodicity: new Periodicity(
                     new DateTime(2020, 1, 1),
                     new DateTime(2020, 1, 16),
-                    WeekDay.Monday
+                    new[]
+                    {
+                        WeekDay.Monday
+                    }
                 )
             ));
 
             Assert.That(recurrentAppointmentIdentifier, Is.Not.Null);
+        }
+        
+        [Test]
+        public void Creating_recurrent_appointment_within_1_day_period_generates_1_appointment()
+        {
+            var scheduler = MakeSchedulerManager();
+
+            scheduler.CreateRecurrentAppointment(MakeNewRecurrentAppointment(
+                new DateTime(2020, 1, 1),
+                "Meeting",
+                60,
+                new[] {"user1"},
+                "PINTA-LX",
+                periodicity: new Periodicity(
+                    new DateTime(2020, 1, 1),
+                    new DateTime(2020, 1, 1),
+                    new[]
+                    {
+                        WeekDay.Wednesday
+                    }
+                )
+            ));
+            
+            var appointmentsBetweenDates = scheduler.GetAppointmentsBetweenDates(new DateTime(2020, 1, 1),new DateTime(2020, 1, 1));
+            Assert.That(appointmentsBetweenDates, Is.Not.Null);
+            Assert.That(appointmentsBetweenDates.Count(), Is.EqualTo(1));
+            RecordsAssert.AreEqual(appointmentsBetweenDates, new []
+            {
+                new Appointment
+                {
+                    Datetime = new DateTime(2020, 1, 1),
+                    subject = "Meeting",
+                    durationInMinutes = 60,
+                    attendees = new[] {"user1"},
+                    location = "PINTA-LX"
+                }
+            });
+        }
+
+        // [Test]
+        public void Creating_recurrent_appointment_within_2_days_period_generates_2_appointment()
+        {
+            var scheduler = MakeSchedulerManager();
+
+            scheduler.CreateRecurrentAppointment(MakeNewRecurrentAppointment(
+                new DateTime(2020, 1, 1),
+                "Meeting",
+                60,
+                new[] { "user1" },
+                "PINTA-LX",
+                periodicity: new Periodicity(
+                    new DateTime(2020, 1, 1),
+                    new DateTime(2020, 1, 2),
+                    new[]
+                    {
+                        WeekDay.Wednesday,
+                        WeekDay.Thursday
+                    }
+                )
+            ));
+            
+            var appointmentsBetweenDates = scheduler.GetAppointmentsBetweenDates(
+                new DateTime(2020, 1, 1), 
+                new DateTime(2020, 1, 2)
+            );
+            
+            RecordsAssert.AreEqual(appointmentsBetweenDates, new []
+            {
+                new Appointment
+                {
+                    Datetime = new DateTime(2020, 1, 1),
+                    subject = "Meeting",
+                    durationInMinutes = 60,
+                    attendees = new[] {"user1"},
+                    location = "PINTA-LX"
+                },
+                new Appointment
+                {
+                    Datetime = new DateTime(2020, 1, 2),
+                    subject = "Meeting",
+                    durationInMinutes = 60,
+                    attendees = new[] {"user1"},
+                    location = "PINTA-LX"
+                }
+            });
+
         }
 
         private NewRecurrentAppointment MakeNewRecurrentAppointment(DateTime startDateTime, string subject,
