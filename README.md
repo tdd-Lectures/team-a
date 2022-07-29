@@ -2,6 +2,7 @@
 
 ## What've seen so far:
 
+
 ---
 
 ### SOLID
@@ -32,8 +33,16 @@
  - One field at a time, so when the test fails for an unexpected reason we can identify it quickly.
    - `Assert.That(appointment.attendees, Is.EqualTo(new [] { "user1" }));`
    
+ 
  - Divide & Conquer
    - When I need a piece of software with its own set of rules that doesn't exist yet, we should stop and develop that piece.
+   
+   
+#### Three Laws
+ - You are not allowed to write production code without a failing test.
+ - Write the minimum of a test to make it fail. Not compiling is failing.
+ - Write the easiest or smallest production code to make the tests pass.
+
 
 ---
 
@@ -47,4 +56,5 @@
 
  - Prefer abstract types over specific types. e.g. `execute(List<int> x)` replace with `execute(IEnumerable<int> x)`.
  - IEnumerable<T> represents a sequence, it could be infinite. A List is finite.
- 
+ - [Law of Demeter (LoD)](https://en.wikipedia.org/wiki/Law_of_Demeter)
+ - 
