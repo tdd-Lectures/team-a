@@ -8,5 +8,6 @@ namespace Scheduler
         int AddAppointment(Appointment appointment);
         Appointment GetAppointmentById(object identifier);
         List<Appointment> GetAppointmentsByDate(DateTime dateTime);
+        IEnumerable<Appointment> GetAppointmentsByUser(string user);
     }
 }

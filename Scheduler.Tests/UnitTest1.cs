@@ -183,42 +183,51 @@ namespace Scheduler.Tests
             });
         }
 
-        // [Test]
-        public void Creating_recurrent_appointment_within_2_days_period_generates_2_appointment()
+        [Test]
+        public void Creating_appointment_and_recurrent_appointment_within_1_day_period_generates_2_appointments()
         {
             var scheduler = MakeSchedulerManager();
 
+            scheduler.CreateAppointment(
+                MakeNewAppointment(
+                    new DateTime(2020, 1, 2),
+                    "Meeting",
+                    60,
+                    new[] { "user1" }
+                ));
+            
             scheduler.CreateRecurrentAppointment(MakeNewRecurrentAppointment(
-                new DateTime(2020, 1, 1),
+                new DateTime(2020, 1, 2),
                 "Meeting",
                 60,
                 new[] { "user1" },
                 "PINTA-LX",
                 periodicity: new Periodicity(
-                    new DateTime(2020, 1, 1),
+                    new DateTime(2020, 1, 2),
                     new DateTime(2020, 1, 2),
                     new[]
                     {
-                        WeekDay.Wednesday,
                         WeekDay.Thursday
                     }
                 )
             ));
+
+            var appointments = scheduler.GetAppointmentsByDate(new DateTime(2020, 1, 2)).ToArray();
+            // var appointmentsBetweenDates = scheduler.GetAppointmentsBetweenDates(
+            //     new DateTime(2020, 1, 1), 
+            //     new DateTime(2020, 1, 2)
+            // );
             
-            var appointmentsBetweenDates = scheduler.GetAppointmentsBetweenDates(
-                new DateTime(2020, 1, 1), 
-                new DateTime(2020, 1, 2)
-            );
-            
-            RecordsAssert.AreEqual(appointmentsBetweenDates, new []
+            RecordsAssert.AreEqual(appointments, new []
             {
                 new Appointment
                 {
-                    Datetime = new DateTime(2020, 1, 1),
+                    identifier = 1,
+                    Datetime = new DateTime(2020, 1, 2),
                     subject = "Meeting",
                     durationInMinutes = 60,
                     attendees = new[] {"user1"},
-                    location = "PINTA-LX"
+                    location = "teams"
                 },
                 new Appointment
                 {
@@ -259,7 +268,7 @@ namespace Scheduler.Tests
 
         private static SchedulerManager MakeSchedulerManager()
         {
-            var scheduler = new SchedulerManager(new AppointmentsGateway());
+            var scheduler = new SchedulerManager(new FakeAppointmentsGateway(), new FakeRecurrentAppointmentGateway());
             return scheduler;
         }
     }

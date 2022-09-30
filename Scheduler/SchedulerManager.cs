@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Scheduler.Tests;
 
 namespace Scheduler
 {
     public class SchedulerManager
     {
         private readonly IAppointmentsGateway _appointmentsGateway;
+        private readonly FakeRecurrentAppointmentGateway _fakeRecurrentAppointmentsGateway;
 
-        public SchedulerManager(IAppointmentsGateway appointmentsGateway)
+        public SchedulerManager(IAppointmentsGateway appointmentsGateway,
+            FakeRecurrentAppointmentGateway fakeRecurrentAppointmentsGateway)
         {
             _appointmentsGateway = appointmentsGateway;
+            _fakeRecurrentAppointmentsGateway = fakeRecurrentAppointmentsGateway;
         }
 
         public object CreateAppointment(NewAppointment newAppointment)
@@ -55,7 +59,28 @@ namespace Scheduler
 
         public List<Appointment> GetAppointmentsByDate(DateTime dateTime)
         {
-            return _appointmentsGateway.GetAppointmentsByDate(dateTime);
+            return _appointmentsGateway
+                .GetAppointmentsByDate(dateTime)
+                .Union(UniteAppointments(dateTime))
+                .ToList();
+        }
+
+        private IEnumerable<Appointment> UniteAppointments(DateTime dateTime)
+        {
+            var recurrentAppointments = _fakeRecurrentAppointmentsGateway.GetRecurrentAppointmentsByDate(dateTime);
+            var appointmentsFactory = new AppointmentsFactory();
+            return recurrentAppointments.Any()
+                ? appointmentsFactory.Create(recurrentAppointments.First())
+                : Enumerable.Empty<Appointment>();
+        }
+
+        private IEnumerable<Appointment> UniteAppointments(String user)
+        {
+            var recurrentAppointments = _fakeRecurrentAppointmentsGateway.GetRecurrentAppointmentsByUser(user);
+            var appointmentsFactory = new AppointmentsFactory();
+            return recurrentAppointments.Any()
+                ? appointmentsFactory.Create(recurrentAppointments.First())
+                : Enumerable.Empty<Appointment>();
         }
 
         public int CreateRecurrentAppointment(NewRecurrentAppointment newRecurrentAppointment)
@@ -63,22 +88,50 @@ namespace Scheduler
             // DateTime startDateTime = newRecurrentAppointment.Periodicity._startDateTime;
             // DateTime endDateTime = newRecurrentAppointment.Periodicity._endDateTime;
             //
+            var recurrentAppointment = new RecurrentAppointment
+            {
+                durationInMinutes = newRecurrentAppointment.DurationInMinutes,
+                attendees = newRecurrentAppointment.Attendees,
+                location = newRecurrentAppointment.Location,
+                subject = newRecurrentAppointment.Subject,
+                periodicity = newRecurrentAppointment.Periodicity,
+            };
+
+            _fakeRecurrentAppointmentsGateway.AddRecurrentAppointment(recurrentAppointment);
+
             return 1;
         }
 
         public IEnumerable<Appointment> GetAppointmentsBetweenDates(DateTime dateTime, DateTime dateTime1)
         {
             return new List<Appointment>
+            {
+                new Appointment
                 {
-                    new Appointment
-                    {
-                        Datetime = new DateTime(2020, 1, 1),
-                        subject = "Meeting",
-                        durationInMinutes = 60,
-                        attendees = new[] {"user1"},
-                        location = "PINTA-LX"
-                    }
-                };
+                    Datetime = new DateTime(2020, 1, 1),
+                    subject = "Meeting",
+                    durationInMinutes = 60,
+                    attendees = new[] { "user1" },
+                    location = "PINTA-LX"
+                }
+            };
+        }
+
+        public IEnumerable<Appointment> GetAppointmentsByUser(string user)
+        {
+            if (user == null)
+            {
+                throw new InvalidUserException();
+            }
+
+            try
+            {
+                return _appointmentsGateway.GetAppointmentsByUser(user).Union(UniteAppointments(user));
+            }
+            catch (Exception e)
+            {
+                throw new GatewayException();
+            }
         }
     }
 }

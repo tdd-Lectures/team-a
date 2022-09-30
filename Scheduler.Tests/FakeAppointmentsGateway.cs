@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Scheduler.Tests
 {
-    public class AppointmentsGateway : IAppointmentsGateway
+    public class FakeAppointmentsGateway : IAppointmentsGateway
     {
         private List<Appointment> appointments = new List<Appointment>();
 
@@ -22,6 +22,16 @@ namespace Scheduler.Tests
         public List<Appointment> GetAppointmentsByDate(DateTime dateTime)
         {
             return appointments.Where(a => a.Datetime == dateTime).ToList();
+        }
+
+        public IEnumerable<Appointment> GetAppointmentsByUser(string user)
+        {
+            if (user == "fail")
+            {
+                throw new Exception();
+            }
+            return appointments
+                .Where((a)=> a.attendees == null || a.attendees.Contains(user));
         }
     }
 }
